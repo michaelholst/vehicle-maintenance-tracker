@@ -1,0 +1,53 @@
+# Environment variables
+.env
+.env.local
+.env.production
+
+# Next.js
+.next/
+out/
+
+# Production build
+build/
+dist/
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Logs
+logs
+*.log
+
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+
+# nyc test coverage
+.nyc_output
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+
+# Database
+prisma/dev.db
+prisma/dev.db-journal
+
+# Server logs
+server.log

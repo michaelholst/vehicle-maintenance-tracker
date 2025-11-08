@@ -1,0 +1,234 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Vehicle {
+  id          String   @id @default(cuid())
+  make        String
+  model       String
+  year        Int
+  type        VehicleType
+  vin         String?  @unique
+  licensePlate String? @unique
+  color       String?
+  odometer    Int?
+  purchasedAt DateTime?
+  soldAt      DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  maintenanceRecords MaintenanceRecord[]
+  parts              Part[]
+  projects           Project[]
+  notes              Note[]
+  documents          Document[]
+
+  @@map("vehicles")
+}
+
+model MaintenanceRecord {
+  id          String            @id @default(cuid())
+  vehicleId   String
+  type        MaintenanceType
+  title       String
+  description String?
+  date        DateTime
+  odometer    Int?
+  cost        Float?
+  laborHours  Float?
+  shopId      String?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  // Relations
+  vehicle   Vehicle   @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  shop      Shop?     @relation(fields: [shopId], references: [id])
+  parts     MaintenancePart[]
+  notes     Note[]
+  documents Document[]
+
+  @@map("maintenance_records")
+}
+
+model Part {
+  id            String    @id @default(cuid())
+  name          String
+  partNumber    String?
+  manufacturer  String?
+  description   String?
+  category      String?
+  cost          Float?
+  quantity      Int       @default(1)
+  minStock      Int?
+  location      String?
+  purchasedAt   DateTime?
+  vehicleId     String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  vehicle    Vehicle?            @relation(fields: [vehicleId], references: [id], onDelete: SetNull)
+  maintenance MaintenancePart[]
+
+  @@map("parts")
+}
+
+model MaintenancePart {
+  id             String @id @default(cuid())
+  maintenanceId  String
+  partId         String
+  quantity       Int    @default(1)
+  unitCost       Float?
+  
+  // Relations
+  maintenance MaintenanceRecord @relation(fields: [maintenanceId], references: [id], onDelete: Cascade)
+  part        Part             @relation(fields: [partId], references: [id], onDelete: Cascade)
+
+  @@unique([maintenanceId, partId])
+  @@map("maintenance_parts")
+}
+
+model Shop {
+  id          String  @id @default(cuid())
+  name        String
+  address     String?
+  phone       String?
+  email       String?
+  website     String?
+  specialties String?
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  maintenanceRecords MaintenanceRecord[]
+
+  @@map("shops")
+}
+
+model Project {
+  id          String     @id @default(cuid())
+  vehicleId   String
+  title       String
+  description String?
+  status      ProjectStatus @default(PLANNING)
+  priority    Priority     @default(MEDIUM)
+  startDate   DateTime?
+  dueDate     DateTime?
+  completedAt DateTime?
+  estimatedCost Float?
+  actualCost    Float?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  // Relations
+  vehicle Vehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  notes   Note[]
+  documents Document[]
+
+  @@map("projects")
+}
+
+model Note {
+  id         String      @id @default(cuid())
+  content    String
+  vehicleId  String?
+  maintenanceId String?
+  projectId  String?
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  // Relations
+  vehicle     Vehicle?          @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  maintenance MaintenanceRecord? @relation(fields: [maintenanceId], references: [id], onDelete: Cascade)
+  project     Project?          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("notes")
+}
+
+model Document {
+  id           String       @id @default(cuid())
+  filename     String
+  originalName String
+  mimeType     String
+  size         Int
+  path         String
+  vehicleId    String?
+  maintenanceId String?
+  projectId    String?
+  uploadedAt   DateTime     @default(now())
+
+  // Relations
+  vehicle     Vehicle?          @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  maintenance MaintenanceRecord? @relation(fields: [maintenanceId], references: [id], onDelete: Cascade)
+  project     Project?          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("documents")
+}
+
+model ServiceInterval {
+  id        String      @id @default(cuid())
+  vehicleId String
+  name      String
+  description String?
+  intervalType IntervalType
+  intervalValue Int
+  lastPerformed DateTime?
+  nextDue       DateTime?
+  notes         String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("service_intervals")
+}
+
+// Enums
+enum VehicleType {
+  CAR
+  MOTORCYCLE
+  BOAT
+}
+
+enum MaintenanceType {
+  OIL_CHANGE
+  TIRE_ROTATION
+  BRAKE_SERVICE
+  FLUID_CHANGE
+  FILTER_REPLACEMENT
+  INSPECTION
+  REPAIR
+  UPGRADE
+  OTHER
+}
+
+enum ProjectStatus {
+  PLANNING
+  IN_PROGRESS
+  ON_HOLD
+  COMPLETED
+  CANCELLED
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum IntervalType {
+  MILES
+  KILOMETERS
+  MONTHS
+  YEARS
+  HOURS
+}
